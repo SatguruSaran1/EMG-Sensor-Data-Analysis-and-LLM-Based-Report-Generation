@@ -42,42 +42,7 @@ Uses RMS amplitude.
 Compares task activation against MVC recordings.
 Reports activation as a percentage of maximum voluntary contraction (%MVC).
 
-Cell 1:
 
-This cell sets up the analysis environment and the main configuration values used throughout the notebook.It also sets the plotting style, defines the paths to the task, baseline, and MVC CSV files, creates the output directory if it does not already exist, and stores the key analysis parameters such as the fatigue window size, RMS window size, band-pass cutoff frequencies, and the first 30 seconds used later as the fatigue reference period.
-
-Cell 2:
-The SENSOR_MAP dictionary tells the notebook which body side, region, and muscle each sensor belongs to, so the plots and summary tables can use anatomical names instead of raw channel numbers.
-
-Cell 3:
-
-This cell reads the custom Trigno CSV header and loads only the EMG columns needed for the analysis. The read_trigno_metadata() function reads the first 8 rows of the file because those rows contain Trigno metadata such as sensor names, sampling rates, and sample intervals rather than signal data. It then scans the sensor-name row, extracts each sensor ID, reads the matching sample-rate and sample-interval text from the later header rows, and stores all of that in a metadata dictionary. The load_emg_csv() function uses that metadata to load only the relevant time and EMG columns, renames them into a clean format such as t_22 and emg_22, and converts them into numeric arrays.
-
-Cell 4:
-
-This cell defines the signal-processing helpers used by both the fatigue and %MVC parts of the notebook. The bandpass_emg() function removes low-frequency movement artifact and high-frequency noise using a Butterworth band-pass filter, while also handling missing values and very short signals safely. window_starts() generates the start indices for sliding windows, and windowed_rms() uses those starts to calculate RMS values over overlapping time windows. The median_frequency_from_psd() and mean_frequency_from_psd() functions compute MDF and MNF from a power spectral density, and sliding_frequency_features() combines all of this by computing MDF, MNF, and RMS for each fatigue window.
-
-Cell 5:
-
-This cell loads the four recordings that the notebook needs: the task file, the baseline file, the left MVC file, and the right MVC file. It first creates the list of sensor IDs from the sensor map, then calls load_emg_csv() for each file so that both the dataframe and the parsed metadata are available for later calculations.
-
-Cell 6:
-
-This cell computes the fatigue features for the task recording and creates summary tables for each sensor. The compute_fatigue_table() function loops through every sensor, prepares the filtered signal, calculates sliding-window MDF, MNF, and RMS values, and then normalizes MDF and MNF using the first 30 seconds of the task as the reference period.The slope_per_minute() helper fits a straight line to a selected feature versus time in minutes, so the notebook can report whether MDF or MNF is rising or falling over time.
-Cell 7:
-
-This cell creates the fatigue plots. The smooth_series() helper uses a centered rolling mean so the trend lines are easier to read, and add_linear_trend() draws a dashed best-fit line on a plot when there are enough valid points. plot_overall_mdf_mnf_fatigue() combines all sensors, averages MDF and MNF by time bin, smooths the results, and plots the overall fatigue trend. plot_group_fatigue() does the same thing but separately for each body group so differences between shoulders and forearms can be seen.
-
-Cell 8:
-
-This cell computes the baseline RMS, the MVC reference values, and the task %MVC time series. The compute_baseline_rms() function processes the baseline recording for each sensor and stores the median RMS as the resting reference level. The mvc_source_for_sensor() function chooses the correct MVC file based on whether the sensor is on the left or right side. The compute_mvc_reference_table() function then calculates the maximum RMS during the MVC recording, subtracts the baseline RMS, and stores the corrected MVC reference for each sensor. After that, compute_percent_mvc_table() processes the task recording, computes task RMS in sliding windows, subtracts the baseline RMS, divides by the corrected MVC reference.
-Cell 9:
-
-This cell generates the %MVC plots. The plot_group_percent_mvc() function groups the task %MVC values by body region, smooths the trend over time, plots one line per group, and adds a 100% reference line so the viewer can see when the task activation is approaching or exceeding MVC.
-
-Cell 10 (True analysis-window fatigue interpretation tables):
-
-This cell generates interpretation tables for the sliding-window analysis and calculates fatigue and activation states. Here is a breakdown of the methodology:
 
 ### Why I choose windows the way I did
 I used sliding (overlapping) windows rather than analyzing the entire signal as a single block to track dynamic changes over time.
